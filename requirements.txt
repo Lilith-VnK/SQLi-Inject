@@ -1,0 +1,6 @@
+PyYAML==6.0.1
+requests==2.31.0
+fake-useragent==1.2.1
+cryptography==42.0.5
+concurrent-log-handler==0.9.24
+python-dateutil==2.9.0.post0
