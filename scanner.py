@@ -32,7 +32,7 @@ class SecurityScanner:
         self.config = self._load_config()
         self.session = self._init_session()
         self.ua = UserAgent()
-        self.cipher = Fernnet(self.config['security']['encryption_key'])
+        self.cipher = Fernet(self.config['security']['encryption_key'])
         self.payload_db = self._load_payloads()
 
     def _load_config(self):

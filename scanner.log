@@ -1,0 +1,68 @@
+2025-03-29 21:29:09,933 - ERROR - Critical failure: name 'Fernnet' is not defined
+Traceback (most recent call last):
+  File "/workspaces/SQLi-Inject/scanner.py", line 257, in execute_scan
+    scanner = SecurityScanner(self.args)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/SQLi-Inject/scanner.py", line 35, in __init__
+    self.cipher = Fernnet(self.config['security']['encryption_key'])
+                  ^^^^^^^
+NameError: name 'Fernnet' is not defined. Did you mean: 'Fernet'?
+2025-03-29 21:38:23,754 - ERROR - Critical failure: name 'Fernnet' is not defined
+Traceback (most recent call last):
+  File "/workspaces/SQLi-Inject/scanner.py", line 257, in execute_scan
+    scanner = SecurityScanner(self.args)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/SQLi-Inject/scanner.py", line 35, in __init__
+    self.cipher = Fernnet(self.config['security']['encryption_key'])
+                  ^^^^^^^
+NameError: name 'Fernnet' is not defined. Did you mean: 'Fernet'?
+2025-03-29 21:40:17,318 - ERROR - Critical failure: Fernet key must be 32 url-safe base64-encoded bytes.
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.12/site-packages/cryptography/fernet.py", line 34, in __init__
+    key = base64.urlsafe_b64decode(key)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/base64.py", line 134, in urlsafe_b64decode
+    return b64decode(s)
+           ^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspaces/SQLi-Inject/scanner.py", line 257, in execute_scan
+    scanner = SecurityScanner(self.args)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/SQLi-Inject/scanner.py", line 35, in __init__
+    self.cipher = Fernet(self.config['security']['encryption_key'])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/cryptography/fernet.py", line 36, in __init__
+    raise ValueError(
+ValueError: Fernet key must be 32 url-safe base64-encoded bytes.
+2025-03-29 21:46:37,757 - ERROR - Critical failure: Fernet key must be 32 url-safe base64-encoded bytes.
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.12/site-packages/cryptography/fernet.py", line 34, in __init__
+    key = base64.urlsafe_b64decode(key)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/base64.py", line 134, in urlsafe_b64decode
+    return b64decode(s)
+           ^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspaces/SQLi-Inject/scanner.py", line 257, in execute_scan
+    scanner = SecurityScanner(self.args)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/SQLi-Inject/scanner.py", line 35, in __init__
+    self.cipher = Fernet(self.config['security']['encryption_key'])
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/cryptography/fernet.py", line 36, in __init__
+    raise ValueError(
+ValueError: Fernet key must be 32 url-safe base64-encoded bytes.
