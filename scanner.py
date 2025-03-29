@@ -9,6 +9,7 @@ import uuid
 import random
 import logging
 import argparse
+import hashlib
 import yaml
 import requests
 from datetime import datetime
@@ -16,21 +17,41 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from fake_useragent import UserAgent
 from cryptography.fernet import Fernet
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('scanner.log'),
+        logging.StreamHandler()
+    ]
+)
+
 class SecurityScanner:
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         self.config = self._load_config()
         self.session = self._init_session()
         self.ua = UserAgent()
-        self.cipher = Fernet(self.config['security']['encryption_key'])
+        self.cipher = Fernnet(self.config['security']['encryption_key'])
         self.payload_db = self._load_payloads()
 
     def _load_config(self):
-        with open('config.yaml') as f:
-            return yaml.safe_load(f)
+        config_path = 'config.yaml'
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Missing config file: {config_path}")
+        
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        
+        for key in ['security', 'payloads', 'network', 'endpoints']:
+            if key not in config:
+                raise ValueError(f"Invalid config: Missing '{key}' section")
+        
+        return config
 
     def _init_session(self):
         session = requests.Session()
-        session.proxies.update(self.config['network']['proxies'])
+        session.proxies.update(self.config['network'].get('proxies', {}))
         session.headers.update({
             'X-Scanner-ID': hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16],
             'Accept-Language': 'en-US,en;q=0.9'
@@ -147,19 +168,66 @@ class SecurityScanner:
         results = []
         for future in as_completed(futures):
             try: results.extend(future.result())
-            except: pass
+            except Exception as e: 
+                logging.error(f"Thread error: {str(e)}")
         return results
 
     def generate_report(self, results, format):
-        if format == 'json': self._write_json(results)
-        elif format == 'csv': self._write_csv(results)
-        else: self._console_output(results)
+        if format == 'json': 
+            self._write_json(results)
+        elif format == 'csv': 
+            self._write_csv(results)
+        else: 
+            self._console_output(results)
+
+    def _error_result(self, url, payload, error_msg):
+        return {
+            'vulnerable': False,
+            'url': url,
+            'payload': self.cipher.encrypt(payload.encode()),
+            'error': error_msg,
+            'timestamp': datetime.now().isoformat()
+        }
+
+    def _write_json(self, results):
+        filename = f"report_{datetime.now().strftime('%Y%m%d%H%M')}.json"
+        with open(filename, 'w') as f:
+            json.dump(results, f, indent=2)
+        logging.info(f"JSON report saved: {filename}")
+
+    def _write_csv(self, results):
+        filename = f"report_{datetime.now().strftime('%Y%m%d%H%M')}.csv"
+        fieldnames = ['timestamp', 'url', 'dbms', 'payload', 'response_time', 'indicators']
+        
+        with open(filename, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for result in results:
+                writer.writerow({
+                    'timestamp': datetime.now().isoformat(),
+                    'url': result['url'],
+                    'dbms': result['dbms'],
+                    'payload': self.cipher.decrypt(result['payload']).decode(),
+                    'response_time': result['response_time'],
+                    'indicators': ";".join(result['indicators'])
+                })
+        logging.info(f"CSV report saved: {filename}")
+
+    def _console_output(self, results):
+        print("\nScan Results:")
+        print("-" * 80)
+        for result in results:
+            status = "VULNERABLE" if result['vulnerable'] else "SAFE"
+            print(f"[{status}] {result['url']}")
+            print(f"DBMS: {result['dbms']}")
+            print(f"Payload: {self.cipher.decrypt(result['payload']).decode()}")
+            print("-" * 80)
 
 class ScannerCLI:
     def __init__(self):
         self.parser = self._create_parser()
         self.args = self.parser.parse_args()
-        self._validate_config()
+        self._validate_args()
 
     def _create_parser(self):
         parser = argparse.ArgumentParser()
@@ -177,16 +245,37 @@ class ScannerCLI:
         parser.add_argument('--random-agent', action='store_true')
         return parser
 
+    def _validate_args(self):
+        if not self.args.dork:
+            self.parser.error("--dork argument is required")
+        
+        if self.args.max_results < 1 or self.args.max_results > 100:
+            self.parser.error("--max-results must be between 1-100")
+
     def execute_scan(self):
-        scanner = SecurityScanner()
-        targets = scanner.execute_search(self._build_params())
-        if targets: 
-            results = scanner.perform_scanning(targets)
-            scanner.generate_report(results, self.args.output)
+        try:
+            scanner = SecurityScanner(self.args)
+            targets = scanner.execute_search({
+                'dork': self.args.dork,
+                'site': self.args.site,
+                'file_type': self.args.file_type,
+                'lang': self.args.lang,
+                'region': self.args.region,
+                'date_range': self.args.date_range,
+                'max_results': self.args.max_results
+            })
+            
+            if targets:
+                results = scanner.perform_scanning(targets)
+                scanner.generate_report(results, self.args.output)
+                
+        except Exception as e:
+            logging.error(f"Critical failure: {str(e)}", exc_info=True)
+            sys.exit(1)
 
 if __name__ == '__main__':
     try:
         ScannerCLI().execute_scan()
     except KeyboardInterrupt:
-        print("\nOperation terminated")
+        print("\nScan aborted by user")
         sys.exit(130)
