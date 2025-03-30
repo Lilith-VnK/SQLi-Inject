@@ -23,7 +23,7 @@
 ## 🛠️ Instalasi
 1. Clone repositori  
 ```bash
-git clone https://github.com/username/SQLi-Inject.git
+git clone https://github.com/Lilith-VnK/SQLi-Inject.git
 ```
 2. Install dependensi  
 ```bash
